@@ -16,6 +16,7 @@ light_temperature = []
 temperature_humidity = []
 humidity_location = []
 n = 1
+
 for i, line in enumerate(lines):
     if i== 0 :
         seeds = [int(x) for x in line.split(":")[1].strip().split(' ')]
@@ -56,22 +57,26 @@ for i, line in enumerate(lines):
 
 
 
+# print(f'seed_soil:')
+# print(seed_soil)
+# print(f'soil_fertilizer:')
+# print(soil_fertilizer)
+# print(f'fertilizer_water:')
+# print(fertilizer_water)
+# print(f'water_light:')
+# print(water_light)
+# print(f'light_temperature:')
+# print(light_temperature)
+# print(f'temperature_humidity:')
+# print(temperature_humidity)
+# print(f'humidity_location:')
+# print(humidity_location)
+
 def destination(num, chunk):
     destination = num
     for range in chunk:
         if num >= range[1] and num <= range[1] +range[2]-1:
             destination = range[0] + (num - range[1])
-    return destination
-
-def destination_by_range(r, chunk):
-    destinations = copy.deepcopy(range)
-    for range in chunk:
-        s_start = range[1]
-        s_end = range[1] +range[2]-1
-        d_start = range[0]
-
-        if (r[1]>= s_start and r[1] <= s_end) or (r[0]>= s_start and r[0] <= s_end):
-
     return destination
 
 def getLocation(seed):
@@ -94,6 +99,9 @@ for seed in seeds:
 # print(f'conversion: {seed_locations}')
 print(f'Solution 1: {min(locations)}')
 
+###########################################################################################################
+
+
 new_seeds = []
 turn = 'start'
 start = 0
@@ -103,140 +111,181 @@ for i, seed in enumerate(seeds) :
         start = seed
         turn = 'range'
     elif (turn == 'range'):
-        for x in range(start, start+seed, 1):
-            location = getLocation(x)
-            print(f'New seed {x}, its locations is {location}')
-            if location < min_location:
-                min_location = location
-            # new_seeds.append(x)
         turn = 'start'
+        new_seeds.append([start, start+seed-1])
     else:
         n=n
 
-print(f'Min location: {min_location}')
-
-# turn = 'start'
-# start = 0
-# new_locations = []
-# new_seed_locations = []getLocation
-# m  = []
-# for i, seed in enumerate(seeds):
-#     if( i %2 == 0):
-#         end = seed + seeds[i+1] -1
-#         # m.append([seed, end])
-#         m.append([seed, end])
-
-# print('seeds')
-# print(m)
-# intersections = []
-# for seed in m:        
-#     for range in m:
-#         if (seed[0]< range[0] and range[0]< seed[1] )or (seed[0]< range[1] and range[1]< seed[1] ):
-#             intersections.append([min( range[0], seed[0]), max( range[1], seed[1]) ])
-
-# # print('intersections')
-# # print(intersections)
-# n_m = []
-# for ar in m:
-#     n_m.append(ar[0])
-
-# # print('starts')
-# # print(n_m)
-# n_m.sort()
-# # print(n_m)
-
-# ordered = []
-# for c in n_m:
-#     for s in m:
-#         if c == s[0]:
-#             ordered.append(s)
-
-# print("ordered")
-# print(ordered)
-# # for seed in m:
-
-# // CORRECT BUT LONG
-
-# new_seeds = []
-# turn = 'start'
-# start = 0
-# for i, seed in enumerate(seeds) :
-#     if (turn == 'start'):
-#         start = seed
-#         turn = 'range'
-#     elif (turn == 'range'):
-#         for x in range(start, start+seed, 1):
-#             new_seeds.append(x)
-#         turn = 'start'
-#     else:
-#         n=n
-
-# print('new_seeds')
+# print('new seeds')
 # print(new_seeds)
 
-# new_locations = []
-# new_seed_locations = []
-# for seed in new_seeds:
-#     soil = destination(seed, seed_soil)
-#     fertilizer = destination(soil, soil_fertilizer)
-#     water = destination(fertilizer, fertilizer_water)
-#     light = destination(water, water_light)
-#     temperature = destination(light, light_temperature)
-#     humidity = destination(temperature, temperature_humidity)
-#     location  = destination(humidity, humidity_location)
-    
-#     new_locations.append(location)
-#     new_seed_locations.append([seed, location])
+sum = 0
+for l in new_seeds:
+    sum = sum + l[1]-l[0]+1
+# print(f'Original seed count: {sum}')
 
-# # print(f'conversion: {new_seed_locations}')
-# print(f'Solution 2: {min(new_locations)}')
+def get_ranges_from_map(map):
+    ranges = []
+    for m in map:
+        ranges.append([m[1], m[1]+m[2]-1])
+    return ranges
 
-
-# for c in m:
-#         if (seed[1]>c[0] and  seed[1]<c[1]) or (seed[0]<c[1] and  seed[0]>c[0]) :
-#             x = min([seed[0], seed[1], c[0], c[1]])
-#             y = max([seed[0], seed[1], c[0], c[1]])
-#             print(f' Intercepts {seed} and {c}: new range {x}, {y}')
-
-# for i, seed in enumerate(seeds) :
-#     if (turn == 'start'):
-#         start = seed
-#         turn = 'range'
-#     elif (turn == 'range'):
-#         for x in range(start, start+seed, 1):
-#             soil = destination(x, seed_soil)
-#             fertilizer = destination(soil, soil_fertilizer)
-#             water = destination(fertilizer, fertilizer_water)
-#             light = destination(water, water_light)
-#             temperature = destination(light, light_temperature)
-#             humidity = destination(temperature, temperature_humidity)
-#             location  = destination(humidity, humidity_location)
-            
-#             new_locations.append(location)
-#             new_seed_locations.append([seed, location])
-#         turn = 'start'
-#     else:
-#         n=n
-
-# # print(f'conversion: {new_seed_locations}')
-# print(f'Solution 2: {min(new_locations)}')
-
-
-
-# // END OF CORRECT BUT LONG
-# print(f'Solution 2: {min(locations)}')
 # print(f'seed_soil:')
-# print(seed_soil)
+# print(get_ranges_from_map(seed_soil))
 # print(f'soil_fertilizer:')
-# print(soil_fertilizer)
+# print(get_ranges_from_map(soil_fertilizer))
 # print(f'fertilizer_water:')
-# print(fertilizer_water)
+# print(get_ranges_from_map(fertilizer_water))
 # print(f'water_light:')
-# print(water_light)
+# print(get_ranges_from_map(water_light))
 # print(f'light_temperature:')
-# print(light_temperature)
+# print(get_ranges_from_map(light_temperature))
 # print(f'temperature_humidity:')
-# print(temperature_humidity)
+# print(get_ranges_from_map(temperature_humidity))
 # print(f'humidity_location:')
-# print(humidity_location)
+# print(get_ranges_from_map(humidity_location))
+
+ 
+def get_intersection(range, dest):
+    new_ranges = []
+
+    # range inside dest
+    if ((dest[0] <= range[0] and range[0] <= dest[1])and (dest[0] <= range[1] and range[1] <= dest[1])):
+        # new_ranges.append([dest[0], range[0]-1])
+        new_ranges.append(range)
+        # new_ranges.append([range[1]+1, dest[1]])
+    # range is in right of dest
+    elif ( (dest[0] <= range[0] and range[0] <= dest[1]) ):
+        # new_ranges.append([dest[0], range[0]-1])
+        new_ranges.append([range[0], dest[1]])
+        new_ranges.append([dest[1]+1, range[1]])
+
+    # range is in left of dest
+    elif ( (dest[0] <= range[1] and range[1] <= dest[1]) ):
+        new_ranges.append([range[0], dest[0]-1])
+        new_ranges.append([dest[0], range[1]])
+        # new_ranges.append([range[1]+1, dest[1]])
+
+    # range larger that dest
+    elif (range[0]<= dest[0] and dest[1]<= range[1]):
+        new_ranges.append([range[0],dest[0]-1])
+        new_ranges.append(dest)
+        new_ranges.append([dest[1]+1,range[1]])
     
+    # range outside dest
+    else:
+        new_ranges.append(range)
+
+    return new_ranges
+
+def expand(list, position, new_elements):
+    list[position:position+1] = new_elements
+
+## Modify ranges praring it for its destination
+def prepare_ranges(origin, destination):
+    # print('original ranges:')
+    # print(origin)
+    i = 0
+    while i < len(origin):
+        updated=False
+        for dest in destination:
+            # print(f'i: {i}')
+            new_ranges = get_intersection(origin[i], dest)
+            # print(f'- Looking for range {origin[i]} in dest {dest}')
+            if(len(new_ranges)>1):
+                expand(origin, i, new_ranges)
+                updated = True
+                # print(f'- - Intersections found: {new_ranges}')
+                # print(f'- - New origin: {origin}')
+            # else:
+                # print(f'- - No itersections found.')
+                # print(f'- - Kept origin: {origin}')
+        if updated == False: 
+            i = i +1
+    # print('new ranges:')
+    # print(origin)
+
+# seed = [start , end]
+def destinationByRange(seed, chunk):
+    destination1 = seed[0]
+    destination2 = seed[1]
+    for range in chunk:
+        if seed[0] >= range[1] and seed[0] <= range[1] +range[2]-1:
+            destination1 = range[0] + (seed[0] - range[1])
+        if seed[1] >= range[1] and seed[1] <= range[1] +range[2]-1:
+            destination2 = range[0] + (seed[1] - range[1])
+    return [destination1, destination2]
+
+# seeds = [start, end]
+def getLocation(seed):
+    
+    soil = destinationByRange(seed, seed_soil)
+    fertilizer = destinationByRange(soil, soil_fertilizer)
+    water = destinationByRange(fertilizer, fertilizer_water)
+    light = destinationByRange(water, water_light)
+    temperature = destinationByRange(light, light_temperature)
+    humidity = destinationByRange(temperature, temperature_humidity)
+    return destinationByRange(humidity, humidity_location)
+
+def getLocationByRanges(seeds):
+    prepare_ranges(seeds, get_ranges_from_map(seed_soil))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, seed_soil))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(soil_fertilizer))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, soil_fertilizer))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(fertilizer_water))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, fertilizer_water))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(water_light))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, water_light))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(light_temperature))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, light_temperature))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(temperature_humidity))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, temperature_humidity))
+    seeds = convert
+
+    prepare_ranges(seeds, get_ranges_from_map(humidity_location))
+    convert = []
+    for seed in seeds:
+        convert.append(destinationByRange(seed, humidity_location))
+    seeds = convert
+
+    # print('output')
+    # print(seeds)
+    return seeds
+    
+locations = getLocationByRanges(new_seeds)
+# print('output')
+# print(locations)
+
+min = math.inf
+sum = 0
+for l in locations:
+    sum = sum + l[1]-l[0]+1
+    if l[0] < min:
+        min = l[0]
+# print(f'seeds count: {sum}')
+print(f'Solution 2: {min}')
+
+# Solution 1: 825516882
+# Solution 2: 136096660
