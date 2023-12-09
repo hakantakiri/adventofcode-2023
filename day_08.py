@@ -135,7 +135,7 @@ def get_lcm(nums):
 def walk_2 (ins, nodes):
     i = 0
     starting = find_idx_starting(nodes)
-    js = find_idx_starting(nodes)
+    js = starting
     # print(f'Starting idx  {js}')
     steps = 0
     found_all = 0
@@ -174,26 +174,18 @@ def walk_2 (ins, nodes):
                 found_all = found_all + 1
         
         steps = steps + 1
-
         i = i +1
         if (i == len(ins)):
             i = 0
 
         js = new_js
 
-    return steps
-
 ################################## EXECUTION
 
 [ins, nodes] = format_lines(lines)
-
-# print(f'Instructions: {ins}')
-# print(f'Nodes: {nodes}')
 steps = walk(ins, nodes)
 print(f'Solution 1: {steps}')
 
-# print('starting for solution 2')
-# print(find_idx_starting(nodes))
 steps2 = walk_2(ins, nodes)
 print(f'Solution 2: {steps2}')
 
