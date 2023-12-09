@@ -132,14 +132,10 @@ def get_prevs ( iterations):
     for iter in iterations:
         sum = 0
         for i, p in enumerate(iter):
-            if( i == 0):
-                sum = p[0]
+            if(i%2):
+                sum = sum - p[0]
             else:
-                # print(f'Curent sum = {sum}, adding value: {p}')
-                if(i%2):
-                    sum = sum - p[0]
-                else:
-                    sum = sum + p[0]  
+                sum = sum + p[0]  
         sums.append(sum)
     return(sums)
 
