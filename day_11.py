@@ -189,6 +189,7 @@ galaxies = find_galaxies(expanded)
 ds = distances(galaxies)
 print(f'Solution 1: {sum(ds)}') # Done in 38m54s91
 
+print('Wait for solution 2, it will take a while ...')
 expanded2 = expand_space(space, 1000000)
 galaxies2 = find_galaxies(expanded2)
 ds2 = distances(galaxies2)
