@@ -47,6 +47,7 @@ def weight(cols):
             if(col[y] == 'O'):
                 count += 1
 
+        # print(f'count is: {count}')
         count = count*(len(cols)-y)
         sum = sum + count
         y+=1
@@ -56,13 +57,14 @@ def weight(cols):
 ############### EXECUTION
 
 cols = get_cols(lines)
-print('cols')
-print(cols)
+# print('cols')
+# print(cols)
 new_cols = collapse(cols)
 
-print('new_cols')
-print(new_cols)
+# print('new_cols')
+# print(new_cols)
 
-print('weight')
-weight = weight(cols)
-print(weight)
+weight = weight(new_cols)
+# print('weight')
+# print(weight)
+print(f'Solution 1: {weight}')
