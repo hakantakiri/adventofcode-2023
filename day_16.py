@@ -260,3 +260,7 @@ for s in solutions:
         max = len(s[1])
 
 print(f'Solution 2: {max}')
+
+# Solution 1 : 8146
+# Solution 2 : 8358
+
