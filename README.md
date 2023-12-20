@@ -5,3 +5,4 @@
 ### 🛠️ Needs improvement
 
 - Day 12 🔴 (left part 2)
+- Day 19 🔴 (WIP part 2: Process chunks insted of numbers)
