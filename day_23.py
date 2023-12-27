@@ -63,13 +63,13 @@ def fill_next(edges, distances, grid):
                         if distances[next[0]-1][next[1]] == '.':
                             distances[next[0]-1][next[1]] = d+2
                             new_edges.append([next[0]-1,next[1]])
-                elif isinstance(distances[next[0]][next[1]], int):
-                    dest_n = distances[next[0]][next[1]]
-                    curr_n = d
-                    if curr_n>dest_n+1 :
-                        print(f'intersection at: {next[0]}, {next[1]}')
-                        distances[next[0]][next[1]] = d+1
-                        new_edges.append([next[0], next[1]])
+                # elif isinstance(distances[next[0]][next[1]], int):
+                #     dest_n = distances[next[0]][next[1]]
+                #     curr_n = d
+                #     if curr_n>dest_n+1 :
+                #         print(f'intersection at: {next[0]}, {next[1]}')
+                #         distances[next[0]][next[1]] = d+1
+                #         new_edges.append([next[0], next[1]])
     return new_edges
 
 def run_from_end(end, distances):
@@ -97,11 +97,12 @@ grid = get_grid(lines)
 (start, end) = get_start_and_end(grid)
 
 distances = fill_distances(grid)
-route = run_from_end(end, distances)
 print_grid(distances)
-print('Route')
-print(route)
-print(f'Solution 1: {len(route)}')
+print(f'Shortest distance to end: {distances[end[0]][end[1]]}')
+# route = run_from_end(end, distances)
+# print('Route')
+# print(route)
+# print(f'Solution 1: {len(route)}')
 
 # print(f'Start is {start}, end is: {end}')
 
