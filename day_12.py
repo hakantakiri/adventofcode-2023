@@ -168,7 +168,7 @@ def is_valid(txt, group):
 def part2(rows, first_arrangements, fixed_rows):
     new_arrangements = []
     for i, row in enumerate(rows):
-        print(f'- {i+1} for row: {row}, its fixed row: {fixed_rows[i]}')
+        print(f'- {i+1} for row: {row}, its fixed row: {fixed_rows[i]}, first arrangement: {first_arrangements[i]}')
         fixed = fixed_rows[i]
         if fixed[-1] == '.' :
         # if fixed[-1] == '.' and fixed[0] != '#':
@@ -181,7 +181,12 @@ def part2(rows, first_arrangements, fixed_rows):
                 *first_arrangements[i])
         else:
             # new_arrangements.append(-1)
-            new_arrangements.append(calculate_arrangement([(fixed+'?')*4+ fixed, row[1]*5], []))
+            # if row[0][0] == '?' and row[0][-1] == '?':
+            #     new_arrangements.append(
+            #         calculate_arrangement([(row[0]+'??')*4+ fixed, row[1]*5], [])
+            #         )
+            # else:
+                new_arrangements.append(calculate_arrangement([(fixed+'?')*4+ fixed, row[1]*5], []))
 
         print(f'- - Past arren: {first_arrangements[i]}, new_arren: {new_arrangements[i]}')
             # if row[0] == '?':
@@ -199,6 +204,8 @@ def part2(rows, first_arrangements, fixed_rows):
 
 
 
+# def calc(text, group):
+#     while text.find('?')>=0:
 
 
 
@@ -210,10 +217,17 @@ print('Wait some seconds for solution 1')
 
 print(f'Solution 1: {sum(arrangements)}')
 
-new_arrangements = part2(rows, arrangements, fixed_rows)
-print('New Arrangement')
-print(new_arrangements)
-print(f'Solution 2: {sum(new_arrangements)}')
+print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
+print('-------------')
+print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
+print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
+# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
+
+# new_arrangements = part2(rows, arrangements, fixed_rows)
+# print('New Arrangement')
+# print(new_arrangements)
+# print(f'Solution 2: {sum(new_arrangements)}')
+
 
 # new_rows = get_mod_rows(lines)
 # print('Wait some seconds for solution 2')
