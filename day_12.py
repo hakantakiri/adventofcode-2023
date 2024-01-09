@@ -207,19 +207,22 @@ def part2(rows, first_arrangements, fixed_rows):
 
 def calc(text, group, counter):
     s = sum(group)
-    if text.find('?')>=0:
-        p = text.find('?')
-        # print(f'Trying index: {p}')
-        for c in (['#', '.']):
-            new = text[0:p]+c+text[p+1:]
-            if new.find('?')>=0 :
-                calc(new, group, counter)
-            else: 
-                # print('no empty remaining')
-                if (is_valid(new, group)):
-                    # print('Is valid')
-                    counter[0] = counter[0] + 1
-                    return
+    # if text.find('?')>=0:
+    p = text.find('?')
+    # print(f'Trying index: {p}')
+    for c in (['#', '.']):
+        new = text[0:p]+c+text[p+1:]
+        sharp = new.count('#')
+        left = new.count('?')
+        if new.find('?')>=0 and sharp+left>=s:
+            calc(new, group, counter)
+        else: 
+            # print('no empty remaining')
+            if (is_valid(new, group)) and sharp == s:
+            # if (is_valid(new, group)):
+                # print('Is valid')
+                counter[0] = counter[0] + 1
+                return
 
 
 
@@ -230,20 +233,27 @@ print('Wait some seconds for solution 1')
 # print(fixed_rows)
 
 print(f'Solution 1: {sum(arrangements)}')
-start = time.time()
-print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
-# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
-end = time.time()
-print(end-start)
 print('-------------')
 
 start = time.time()
 counter = [0]
-calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter)
+# calc('?.?..?..?????', [1,4], counter)
+# calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter)
+calc('?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4], counter)
 print('Counter')
 print(counter)
 end = time.time()
 print(end-start)
+
+print('-------------')
+
+start = time.time()
+# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
+# print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
+print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
+end = time.time()
+print(end-start)
+
 
 # print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
 
