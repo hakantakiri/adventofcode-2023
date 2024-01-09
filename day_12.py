@@ -1,4 +1,4 @@
-import itertools
+import time
 f = open('inputs/doc_day_12.txt')
 lines = f.read()
 lines = lines.splitlines()
@@ -152,6 +152,7 @@ def row_with_permanent(text, permanent_fill):
     return txt.replace('&', '?')
 
 def is_valid(txt, group):
+    # print(f'- Verifying {txt} to valid {group}')
     t_group = []
     count = 0
     for c in txt:
@@ -204,8 +205,21 @@ def part2(rows, first_arrangements, fixed_rows):
 
 
 
-# def calc(text, group):
-#     while text.find('?')>=0:
+def calc(text, group, counter):
+    s = sum(group)
+    if text.find('?')>=0:
+        p = text.find('?')
+        # print(f'Trying index: {p}')
+        for c in (['#', '.']):
+            new = text[0:p]+c+text[p+1:]
+            if new.find('?')>=0 :
+                calc(new, group, counter)
+            else: 
+                # print('no empty remaining')
+                if (is_valid(new, group)):
+                    # print('Is valid')
+                    counter[0] = counter[0] + 1
+                    return
 
 
 
@@ -216,11 +230,21 @@ print('Wait some seconds for solution 1')
 # print(fixed_rows)
 
 print(f'Solution 1: {sum(arrangements)}')
-
-print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
-print('-------------')
+start = time.time()
 print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
-print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
+# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
+end = time.time()
+print(end-start)
+print('-------------')
+
+start = time.time()
+counter = [0]
+calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter)
+print('Counter')
+print(counter)
+end = time.time()
+print(end-start)
+
 # print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
 
 # new_arrangements = part2(rows, arrangements, fixed_rows)
