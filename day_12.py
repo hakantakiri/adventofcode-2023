@@ -1,3 +1,4 @@
+from functools import cache
 import copy
 import time
 f = open('inputs/doc_day_12.txt')
@@ -231,7 +232,7 @@ def part2(rows, first_arrangements, fixed_rows):
             #     new_arrangements.append(calculate_arrangement([(row[0]+'?')*4+ row[0], row[1]*5], []))
     return new_arrangements
 
-
+@cache
 def calc(text, group, counter ):
     s = sum(group)
     p = text.find('?')
@@ -247,7 +248,7 @@ def calc(text, group, counter ):
                     counter[0] = counter[0] + 1
 
 
-def part2_2( rows):
+def part2_2(rows, prev):
     possibles = []
     for r in rows:
         counter = [0]
@@ -266,9 +267,9 @@ print(f'Solution 1: {possibles}')
 print(f'Solution 1: {sum(possibles)}')
 print('-------------')
 
-possibles_2 = part2_2(rows)
-print(f'Solution 2: {possibles_2}')
-print(f'Solution 2: {sum(possibles_2)}')
+# possibles_2 = part2_2(rows)
+# print(f'Solution 2: {possibles_2}')
+# print(f'Solution 2: {sum(possibles_2)}')
 
 start = time.time()
 counter = [0]
