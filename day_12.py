@@ -1,3 +1,4 @@
+import copy
 import time
 f = open('inputs/doc_day_12.txt')
 lines = f.read()
@@ -70,12 +71,13 @@ def get_rows_2(lines):
     return rows
 
 def part1( rows):
-    counts = []
-    rows_fixed = []
-    for row in rows:
-        # print(f'- Row with permanent: {row_fixed}')
-        counts.append(calculate_arrangement(row, rows_fixed))
-    return (counts, rows_fixed)
+    possibles = []
+    for r in rows:
+        counter = [0]
+        calc(r[0], r[1], counter)
+        possibles.append(counter[0])
+    return possibles
+        
 
 def calculate_arrangement(row, rows_fixed):
     fails = row[0].count('?')
@@ -118,7 +120,6 @@ def get_permanents(fills):
             ar[i] = 1
     
     return ar
-    
 
 def generate_fill(quant, length):
     base =  '0'*(length-quant)+'1'*quant
@@ -166,6 +167,31 @@ def is_valid(txt, group):
     
     return True if(t_group == group) else False
 
+def get_groups_to_section(txt, group):
+    t_group = []
+    count = 0
+    for c in txt:
+        if c == '#':
+            count +=1
+        elif c == '.' and count>0:
+            t_group.append(count)
+            count = 0
+    if count > 0 and txt[-1] == '#':
+        t_group.append(count)
+
+    if len(group)< len(t_group):
+        return False
+    
+    j = len(t_group)-1
+    for i in range(0, j+1):
+        if( i < j):
+            if( group[i] != t_group[i]):
+                return False
+        elif ( i == j):
+            if (t_group[i] > group[i]):
+                return False
+    return True
+
 def part2(rows, first_arrangements, fixed_rows):
     new_arrangements = []
     for i, row in enumerate(rows):
@@ -187,7 +213,9 @@ def part2(rows, first_arrangements, fixed_rows):
             #         calculate_arrangement([(row[0]+'??')*4+ fixed, row[1]*5], [])
             #         )
             # else:
-                new_arrangements.append(calculate_arrangement([(fixed+'?')*4+ fixed, row[1]*5], []))
+                n_count = [0]
+                calc((fixed+'?')*4+ fixed, row[1]*5, n_count)
+                new_arrangements.append(n_count[0])
 
         print(f'- - Past arren: {first_arrangements[i]}, new_arren: {new_arrangements[i]}')
             # if row[0] == '?':
@@ -204,43 +232,52 @@ def part2(rows, first_arrangements, fixed_rows):
     return new_arrangements
 
 
-
-def calc(text, group, counter):
+def calc(text, group, counter ):
     s = sum(group)
-    # if text.find('?')>=0:
     p = text.find('?')
-    # print(f'Trying index: {p}')
     for c in (['#', '.']):
         new = text[0:p]+c+text[p+1:]
-        sharp = new.count('#')
-        left = new.count('?')
-        if new.find('?')>=0 and sharp+left>=s:
-            calc(new, group, counter)
-        else: 
-            # print('no empty remaining')
-            if (is_valid(new, group)) and sharp == s:
-            # if (is_valid(new, group)):
-                # print('Is valid')
-                counter[0] = counter[0] + 1
-                return
+        if get_groups_to_section(new[0: p+1], group):
+            left = new.count('?')
+            sharp = new.count('#')
+            if new.find('?')>=0 and sharp+left>=s :
+                calc(new, group, counter)
+            else: 
+                if (is_valid(new, group)) and sharp == s:
+                    counter[0] = counter[0] + 1
+
+
+def part2_2( rows):
+    possibles = []
+    for r in rows:
+        counter = [0]
+        calc((r[0]+'?')*4+r[0], r[1]*5, counter)
+        possibles.append(counter[0])
+    return possibles
 
 
 
 ############ EXECUTION
 rows = get_rows(lines)
 print('Wait some seconds for solution 1')
-(arrangements, fixed_rows) = part1(rows)
-# print(fixed_rows)
+possibles = part1(rows)
 
-print(f'Solution 1: {sum(arrangements)}')
+print(f'Solution 1: {possibles}')
+print(f'Solution 1: {sum(possibles)}')
 print('-------------')
+
+possibles_2 = part2_2(rows)
+print(f'Solution 2: {possibles_2}')
+print(f'Solution 2: {sum(possibles_2)}')
 
 start = time.time()
 counter = [0]
-# calc('?.?..?..?????', [1,4], counter)
-# calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter)
-calc('?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4], counter)
-print('Counter')
+# calc('?.?..?..?????', [1,4], counter) # 6
+calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter) # 78
+# calc('?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4], counter) # 1038
+# calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4], counter) 
+# calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4,1,4], counter)
+# print('Counter')
 print(counter)
 end = time.time()
 print(end-start)
@@ -249,54 +286,9 @@ print('-------------')
 
 start = time.time()
 # print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
-# print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
-print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
+print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
+# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
+# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4]], []))
+# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4,1,4]], []))
 end = time.time()
 print(end-start)
-
-
-# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
-
-# new_arrangements = part2(rows, arrangements, fixed_rows)
-# print('New Arrangement')
-# print(new_arrangements)
-# print(f'Solution 2: {sum(new_arrangements)}')
-
-
-# new_rows = get_mod_rows(lines)
-# print('Wait some seconds for solution 2')
-# print(f'Solution 2: {sum(part1(new_rows))}')
-
-# print(generate_fill(5, 12))
-
-
-# def get_rows (lines):
-#     rows = []   
-#     for i, line in enumerate(lines):
-#         rows.append([i, line.split(' ')[0], [int(n) for n in line.split(' ')[1].split(',')]])
-#     return rows
-
-# def get_space(rows):
-
-#     for r in rows:
-
-#         count = 0
-#         for c in list(r[1]):
-#             # print(f'searching c: {c} row: {r[1]}')
-#             if '#?'.find(c) >= 0:
-#                 count = count+1
-#                 # print(f'- count is: {count}')
-#         # print(f'- count is: {count}')        
-#         r.append(count)
-
-#     return rows
-
-
-# ############################## EXECUTION
-# rows = get_rows(lines)
-# print(rows)
-# print('Extended')
-# space = get_space(rows)
-# print(space)
-# for r in space:
-#     print(f'{len(r[1])}, {sum(r[2])+len(r[2])-1} | {r[3]}, {sum(r[2])}')
