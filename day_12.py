@@ -1,5 +1,103 @@
-import functools
-import time
+# --- Day 12: Hot Springs ---
+# You finally reach the hot springs! You can see steam rising from secluded areas attached to the primary, ornate building.
+
+# As you turn to enter, the researcher stops you. "Wait - I thought you were looking for the hot springs, weren't you?" You indicate that this definitely looks like hot springs to you.
+
+# "Oh, sorry, common mistake! This is actually the onsen! The hot springs are next door."
+
+# You look in the direction the researcher is pointing and suddenly notice the massive metal helixes towering overhead. "This way!"
+
+# It only takes you a few more steps to reach the main gate of the massive fenced-off area containing the springs. You go through the gate and into a small administrative building.
+
+# "Hello! What brings you to the hot springs today? Sorry they're not very hot right now; we're having a lava shortage at the moment." You ask about the missing machine parts for Desert Island.
+
+# "Oh, all of Gear Island is currently offline! Nothing is being manufactured at the moment, not until we get more lava to heat our forges. And our springs. The springs aren't very springy unless they're hot!"
+
+# "Say, could you go up and see why the lava stopped flowing? The springs are too cold for normal operation, but we should be able to find one springy enough to launch you up there!"
+
+# There's just one problem - many of the springs have fallen into disrepair, so they're not actually sure which springs would even be safe to use! Worse yet, their condition records of which springs are damaged (your puzzle input) are also damaged! You'll need to help them repair the damaged records.
+
+# In the giant field just outside, the springs are arranged into rows. For each row, the condition records show every spring and whether it is operational (.) or damaged (#). This is the part of the condition records that is itself damaged; for some springs, it is simply unknown (?) whether the spring is operational or damaged.
+
+# However, the engineer that produced the condition records also duplicated some of this information in a different format! After the list of springs for a given row, the size of each contiguous group of damaged springs is listed in the order those groups appear in the row. This list always accounts for every damaged spring, and each number is the entire size of its contiguous group (that is, groups are always separated by at least one operational spring: #### would always be 4, never 2,2).
+
+# So, condition records with no unknown spring conditions might look like this:
+
+# #.#.### 1,1,3
+# .#...#....###. 1,1,3
+# .#.###.#.###### 1,3,1,6
+# ####.#...#... 4,1,1
+# #....######..#####. 1,6,5
+# .###.##....# 3,2,1
+# However, the condition records are partially damaged; some of the springs' conditions are actually unknown (?). For example:
+
+# ???.### 1,1,3
+# .??..??...?##. 1,1,3
+# ?#?#?#?#?#?#?#? 1,3,1,6
+# ????.#...#... 4,1,1
+# ????.######..#####. 1,6,5
+# ?###???????? 3,2,1
+# Equipped with this information, it is your job to figure out how many different arrangements of operational and broken springs fit the given criteria in each row.
+
+# In the first line (???.### 1,1,3), there is exactly one way separate groups of one, one, and three broken springs (in that order) can appear in that row: the first three unknown springs must be broken, then operational, then broken (#.#), making the whole row #.#.###.
+
+# The second line is more interesting: .??..??...?##. 1,1,3 could be a total of four different arrangements. The last ? must always be broken (to satisfy the final contiguous group of three broken springs), and each ?? must hide exactly one of the two broken springs. (Neither ?? could be both broken springs or they would form a single contiguous group of two; if that were true, the numbers afterward would have been 2,3 instead.) Since each ?? can either be #. or .#, there are four possible arrangements of springs.
+
+# The last line is actually consistent with ten different arrangements! Because the first number is 3, the first and second ? must both be . (if either were #, the first number would have to be 4 or higher). However, the remaining run of unknown spring conditions have many different ways they could hold groups of two and one broken springs:
+
+# ?###???????? 3,2,1
+# .###.##.#...
+# .###.##..#..
+# .###.##...#.
+# .###.##....#
+# .###..##.#..
+# .###..##..#.
+# .###..##...#
+# .###...##.#.
+# .###...##..#
+# .###....##.#
+# In this example, the number of possible arrangements for each row is:
+
+# ???.### 1,1,3 - 1 arrangement
+# .??..??...?##. 1,1,3 - 4 arrangements
+# ?#?#?#?#?#?#?#? 1,3,1,6 - 1 arrangement
+# ????.#...#... 4,1,1 - 1 arrangement
+# ????.######..#####. 1,6,5 - 4 arrangements
+# ?###???????? 3,2,1 - 10 arrangements
+# Adding all of the possible arrangement counts together produces a total of 21 arrangements.
+
+# For each row, count all of the different arrangements of operational and broken springs that meet the given criteria. What is the sum of those counts?
+
+# Your puzzle answer was 7191.
+
+# --- Part Two ---
+# As you look out at the field of springs, you feel like there are way more springs than the condition records list. When you examine the records, you discover that they were actually folded up this whole time!
+
+# To unfold the records, on each row, replace the list of spring conditions with five copies of itself (separated by ?) and replace the list of contiguous groups of damaged springs with five copies of itself (separated by ,).
+
+# So, this row:
+
+# .# 1
+# Would become:
+
+# .#?.#?.#?.#?.# 1,1,1,1,1
+# The first line of the above example would become:
+
+# ???.###????.###????.###????.###????.### 1,1,3,1,1,3,1,1,3,1,1,3,1,1,3
+# In the above example, after unfolding, the number of possible arrangements for some rows is now much larger:
+
+# ???.### 1,1,3 - 1 arrangement
+# .??..??...?##. 1,1,3 - 16384 arrangements
+# ?#?#?#?#?#?#?#? 1,3,1,6 - 1 arrangement
+# ????.#...#... 4,1,1 - 16 arrangements
+# ????.######..#####. 1,6,5 - 2500 arrangements
+# ?###???????? 3,2,1 - 506250 arrangements
+# After unfolding, adding all of the possible arrangement counts together produces 525152.
+
+# Unfold your condition records; what is the new sum of possible arrangement counts?
+
+# Your puzzle answer was 6512849198636.
+
 f = open('inputs/doc_day_12.txt')
 lines = f.read()
 lines = lines.splitlines()
@@ -23,273 +121,60 @@ def get_rows(lines):
         row[0] = ''.join(new_fail)
     return rows
 
-def get_mod_rows(lines):
-    rows = []
-    for line in lines:
-        failed = '?'+line.split(' ')[0]
-        groups = [int(n) for n in line.split(' ')[1].split(',')]
-        rows.append([failed, groups])
+dict = {} # For memoization that saves time for part 2, this "dict" implementation can be replaced with @functools.lru_cache
+def calc(record, groups):
 
-    for row in rows:
-        new_fail = []
-        prev = ''
-        for c in row[0]:
-            if(c == '.' and prev != '.'):
-                new_fail.append(c)
-            elif(c != '.'):
-                new_fail.append(c)
-            prev = c
-        row[0] = ''.join(new_fail)
-    return rows
+    # Checks if solution already in memo
+    if (record+str(groups)) in dict:
+        return dict[record+str(groups)] 
 
-
-def get_rows_2(lines):
-    rows = []
-    for line in lines:
-        failed = line.split(' ')[0]+'?'\
-            +line.split(' ')[0]+'?'\
-                +line.split(' ')[0]+'?'\
-                    +line.split(' ')[0]+'?'\
-                        +line.split(' ')[0]
-        groups = [int(n) for n in line.split(' ')[1].split(',')]\
-            + [int(n) for n in line.split(' ')[1].split(',')]\
-                +[int(n) for n in line.split(' ')[1].split(',')]\
-                    +[int(n) for n in line.split(' ')[1].split(',')]\
-                        +[int(n) for n in line.split(' ')[1].split(',')]
-        rows.append([failed, groups])
-
-    for row in rows:
-        new_fail = []
-        prev = ''
-        for c in row[0]:
-            if(c == '.' and prev != '.'):
-                new_fail.append(c)
-            elif(c != '.'):
-                new_fail.append(c)
-            prev = c
-        row[0] = ''.join(new_fail)
-    return rows
-
-
-def calculate_arrangement(row, rows_fixed):
-    fails = row[0].count('?')
-    # fail_len = len(row[0])
-    # correct_len = sum(row[1])+len(row[1])-1
-    left = sum(row[1])-row[0].count('#')
-    # print(f'{i+1}: Fails: {fails}, left:{left}, fail_len:{fail_len}, correct_len:{correct_len}')
-    possibles = generate_fill(left, fails)
-    # print(f'For row: {row}')
-    fills = []
-    count = 0
-    for fill in possibles:
-        new_word = replace(row[0], fill)
-        # print(f'- - Trying word {new_word}')
-        if(is_valid(new_word, row[1])):
-            count +=1
-            fills.append(fill)
-    # print(f'- Valid: {count}')
-    permanents = get_permanents(fills)
-    # print(f'- Permanents are: {permanents}')
-    row_fixed = row_with_permanent(row[0], permanents)
-    rows_fixed.append(row_fixed)
-    return count
-
-
-
-def get_permanents(fills):
-    # print(f'- options: {len(fills)}')
-    l = len(fills[0])
-    ar = [0 for n in fills[0]]
-
-    for fill in fills:
-        for i in range(0, l):
-            ar[i] +=( 1 if fill[i] == '#' else 0)
-    # print(ar)
-    for i, n in enumerate(ar):
-        if n != 0 and n != len(fills):
-            ar[i] = -1
-        elif n == len(fills):
-            ar[i] = 1
-    
-    return ar
-
-def generate_fill(quant, length):
-    base =  '0'*(length-quant)+'1'*quant
-    limit = '1'*quant + '0'*(length-quant)
-    fills = []
-    for i in range(int(base, 2), int(limit, 2)+1):
-        n = format(i, '0'+str(length)+'b')
-        if n.count('1') == quant:
-            fills.append(n.replace('1','#').replace('0','.'))
-    return fills
-
-def replace(text, fill):
-    txt = list(text)
-    while '?' in txt:
-        i = txt.index('?')
-        txt[i] = fill[0]
-        fill = fill[1:]
-    return ''.join(txt)
-
-def row_with_permanent(text, permanent_fill):
-    txt = list(text)
-    while len(permanent_fill)>0:
-        i = txt.index('?')
-        if permanent_fill[0] != -1:
-            txt[i] = '#' if permanent_fill[0] == 1 else '.'
-        else:
-            txt[i] = '&'
-        permanent_fill = permanent_fill[1:]
-    
-    txt = ''.join(txt)
-    return txt.replace('&', '?')
-
-
-
-def part2(rows, first_arrangements, fixed_rows):
-    new_arrangements = []
-    for i, row in enumerate(rows):
-        print(f'- {i+1} for row: {row}, its fixed row: {fixed_rows[i]}, first arrangement: {first_arrangements[i]}')
-        fixed = fixed_rows[i]
-        if fixed[-1] == '.' :
-        # if fixed[-1] == '.' and fixed[0] != '#':
-            new_arrangements.append(first_arrangements[i]*\
-                pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
-        elif fixed[0] == '.':
-        # elif fixed[0] == '.' and fixed[-1] != '#':
-            new_arrangements.append(\
-                pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
-                *first_arrangements[i])
-        else:
-            # new_arrangements.append(-1)
-            # if row[0][0] == '?' and row[0][-1] == '?':
-            #     new_arrangements.append(
-            #         calculate_arrangement([(row[0]+'??')*4+ fixed, row[1]*5], [])
-            #         )
-            # else:
-                calc((fixed+'?')*4+ fixed, row[1]*5)
-
-        print(f'- - Past arren: {first_arrangements[i]}, new_arren: {new_arrangements[i]}')
-            # if row[0] == '?':
-            #     print("row[0] == '?'")
-            #     new_arrangements.append(first_arrangements[i]*\
-            #     pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
-            # elif row[-1] == '?':
-            #     print("row[-1] == '?'")
-            #     new_arrangements.append(\
-            #         pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
-            #         *first_arrangements[i])
-            # else:
-            #     new_arrangements.append(calculate_arrangement([(row[0]+'?')*4+ row[0], row[1]*5], []))
-    return new_arrangements
-
-####################################################3333
-
-def is_valid(txt, group):
-    t_group = []
-    count = 0
-    for c in txt:
-        if c =='#':
-            count +=1
-        elif c == '.' and count>0:
-            t_group.append(count)
-            count = 0
-    if count>0 and txt[-1] == '#':
-        t_group.append(count)
-    
-    return True if(t_group == group) else False
-
-def get_groups_to_section(txt, group):
-    t_group = []
-    count = 0
-    for c in txt:
-        if c == '#':
-            count +=1
-        elif c == '.' and count>0:
-            t_group.append(count)
-            count = 0
-    if count > 0 and txt[-1] == '#':
-        t_group.append(count)
-
-    if len(group)< len(t_group):
-        return False
-    
-    j = len(t_group)-1
-    for i in range(0, j+1):
-        if( i < j):
-            if( group[i] != t_group[i]):
-                return False
-        elif ( i == j):
-            if (t_group[i] > group[i]):
-                return False
-    return True
-
-def calc(text, group):
-    s = sum(group)
-    p = text.find('?')
+    if not record:
+        return 0
+    c = record[0]
+    group = groups[0]
     out = 0
-    for c in (['#', '.']):
-        new = text[0:p]+c+text[p+1:]
-        if get_groups_to_section(new[0: p+1], group):
-            left = new.count('?')
-            sharp = new.count('#')
-            if new.find('?')>=0 and sharp+left>=s :
-                out += calc(new, group)
-            else: 
-                if (is_valid(new, group)) and sharp == s:
-                   return 1
+
+    def process_dot():
+        return calc(record[1:], groups)
+    
+    def process_sharp():
+        section = record[0:group]
+        section = section.replace('?', '#')
+        
+        if section == '#'*group:
+            if len(groups) == 1 and '#' not in record[group:]:
+                return 1
+            elif len(groups)>1 and len(record)>group and record[group] != '#':
+                return calc(record[group+1:], groups[1:])
+        return 0
+
+    if( c == '.'):
+        out += process_dot()
+    elif (c == '#'):
+        out += process_sharp()
+    elif( c =='?'):
+        out += process_sharp() + process_dot()
+    
+    # Adds solution to dict if is a new possibility
+    if ( record+str(groups)) not in dict:
+        dict[record+str(groups)] = out
+    
     return out
 
-
-def part1( rows):
-    possibles = []
+def part_1(rows):
+    p=[]
     for r in rows:
-        counter = calc(r[0], r[1])
-        possibles.append(counter)
-    return possibles
-        
+        p.append(calc(r[0], tuple(r[1])))
+    return p
 
-def part2_2(rows):
-    possibles = []
+def part_2(rows):
+    p = []
     for r in rows:
-        possibles.append(calc((r[0]+'?')*4+r[0], r[1]*5))
-    return possibles
+        p.append(calc((r[0]+'?')*4+r[0], tuple(r[1]*5)))
+    return p
 
+################## Execution
 
-
-############ EXECUTION
 rows = get_rows(lines)
-# print(rows)
-print('Wait some seconds for solution 1')
-possibles = part1(rows)
-
-print(f'Solution 1: {possibles}')
-print(f'Solution 1: {sum(possibles)}')
-print('-------------')
-
-# possibles_2 = part2_2(rows)
-# print(f'Solution 2: {possibles_2}')
-# print(f'Solution 2: {sum(possibles_2)}')
-
-start = time.time()
-
-# calc('?.?..?..?????', [1,4], counter) # 6
-counter = calc('?.?..?..???????.?..?..?????', [1,4,1,4]) # 78
-# calc('?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4], counter) # 1038
-# calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4], counter) 
-# calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4,1,4], counter)
-# print('Counter')
-print(counter)
-end = time.time()
-print(end-start)
-
-print('-------------')
-
-start = time.time()
-# print(calculate_arrangement(['?.?..?..?????', [1,4]], []))
-print(calculate_arrangement(['?.?..?..???????.?..?..?????', [1,4,1,4]], []))
-# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4]], []))
-# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4]], []))
-# print(calculate_arrangement(['?.?..?..???????.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4,1,4]], []))
-end = time.time()
-print(end-start)
+print(f'Solution 1: {sum(part_1(rows))}')
+print(f'Solution 2: {sum(part_2(rows))}')
