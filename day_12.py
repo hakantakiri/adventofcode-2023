@@ -1,5 +1,4 @@
-from functools import cache
-import copy
+import functools
 import time
 f = open('inputs/doc_day_12.txt')
 lines = f.read()
@@ -71,14 +70,6 @@ def get_rows_2(lines):
         row[0] = ''.join(new_fail)
     return rows
 
-def part1( rows):
-    possibles = []
-    for r in rows:
-        counter = [0]
-        calc(r[0], r[1], counter)
-        possibles.append(counter[0])
-    return possibles
-        
 
 def calculate_arrangement(row, rows_fixed):
     fails = row[0].count('?')
@@ -153,8 +144,48 @@ def row_with_permanent(text, permanent_fill):
     txt = ''.join(txt)
     return txt.replace('&', '?')
 
+
+
+def part2(rows, first_arrangements, fixed_rows):
+    new_arrangements = []
+    for i, row in enumerate(rows):
+        print(f'- {i+1} for row: {row}, its fixed row: {fixed_rows[i]}, first arrangement: {first_arrangements[i]}')
+        fixed = fixed_rows[i]
+        if fixed[-1] == '.' :
+        # if fixed[-1] == '.' and fixed[0] != '#':
+            new_arrangements.append(first_arrangements[i]*\
+                pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
+        elif fixed[0] == '.':
+        # elif fixed[0] == '.' and fixed[-1] != '#':
+            new_arrangements.append(\
+                pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
+                *first_arrangements[i])
+        else:
+            # new_arrangements.append(-1)
+            # if row[0][0] == '?' and row[0][-1] == '?':
+            #     new_arrangements.append(
+            #         calculate_arrangement([(row[0]+'??')*4+ fixed, row[1]*5], [])
+            #         )
+            # else:
+                calc((fixed+'?')*4+ fixed, row[1]*5)
+
+        print(f'- - Past arren: {first_arrangements[i]}, new_arren: {new_arrangements[i]}')
+            # if row[0] == '?':
+            #     print("row[0] == '?'")
+            #     new_arrangements.append(first_arrangements[i]*\
+            #     pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
+            # elif row[-1] == '?':
+            #     print("row[-1] == '?'")
+            #     new_arrangements.append(\
+            #         pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
+            #         *first_arrangements[i])
+            # else:
+            #     new_arrangements.append(calculate_arrangement([(row[0]+'?')*4+ row[0], row[1]*5], []))
+    return new_arrangements
+
+####################################################3333
+
 def is_valid(txt, group):
-    # print(f'- Verifying {txt} to valid {group}')
     t_group = []
     count = 0
     for c in txt:
@@ -193,73 +224,42 @@ def get_groups_to_section(txt, group):
                 return False
     return True
 
-def part2(rows, first_arrangements, fixed_rows):
-    new_arrangements = []
-    for i, row in enumerate(rows):
-        print(f'- {i+1} for row: {row}, its fixed row: {fixed_rows[i]}, first arrangement: {first_arrangements[i]}')
-        fixed = fixed_rows[i]
-        if fixed[-1] == '.' :
-        # if fixed[-1] == '.' and fixed[0] != '#':
-            new_arrangements.append(first_arrangements[i]*\
-                pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
-        elif fixed[0] == '.':
-        # elif fixed[0] == '.' and fixed[-1] != '#':
-            new_arrangements.append(\
-                pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
-                *first_arrangements[i])
-        else:
-            # new_arrangements.append(-1)
-            # if row[0][0] == '?' and row[0][-1] == '?':
-            #     new_arrangements.append(
-            #         calculate_arrangement([(row[0]+'??')*4+ fixed, row[1]*5], [])
-            #         )
-            # else:
-                n_count = [0]
-                calc((fixed+'?')*4+ fixed, row[1]*5, n_count)
-                new_arrangements.append(n_count[0])
-
-        print(f'- - Past arren: {first_arrangements[i]}, new_arren: {new_arrangements[i]}')
-            # if row[0] == '?':
-            #     print("row[0] == '?'")
-            #     new_arrangements.append(first_arrangements[i]*\
-            #     pow(calculate_arrangement(['?'+row[0], row[1]], []), 4))
-            # elif row[-1] == '?':
-            #     print("row[-1] == '?'")
-            #     new_arrangements.append(\
-            #         pow(calculate_arrangement([row[0]+'?', row[1]], []), 4)\
-            #         *first_arrangements[i])
-            # else:
-            #     new_arrangements.append(calculate_arrangement([(row[0]+'?')*4+ row[0], row[1]*5], []))
-    return new_arrangements
-
-@cache
-def calc(text, group, counter ):
+def calc(text, group):
     s = sum(group)
     p = text.find('?')
+    out = 0
     for c in (['#', '.']):
         new = text[0:p]+c+text[p+1:]
         if get_groups_to_section(new[0: p+1], group):
             left = new.count('?')
             sharp = new.count('#')
             if new.find('?')>=0 and sharp+left>=s :
-                calc(new, group, counter)
+                out += calc(new, group)
             else: 
                 if (is_valid(new, group)) and sharp == s:
-                    counter[0] = counter[0] + 1
+                   return 1
+    return out
 
 
-def part2_2(rows, prev):
+def part1( rows):
     possibles = []
     for r in rows:
-        counter = [0]
-        calc((r[0]+'?')*4+r[0], r[1]*5, counter)
-        possibles.append(counter[0])
+        counter = calc(r[0], r[1])
+        possibles.append(counter)
+    return possibles
+        
+
+def part2_2(rows):
+    possibles = []
+    for r in rows:
+        possibles.append(calc((r[0]+'?')*4+r[0], r[1]*5))
     return possibles
 
 
 
 ############ EXECUTION
 rows = get_rows(lines)
+# print(rows)
 print('Wait some seconds for solution 1')
 possibles = part1(rows)
 
@@ -272,9 +272,9 @@ print('-------------')
 # print(f'Solution 2: {sum(possibles_2)}')
 
 start = time.time()
-counter = [0]
+
 # calc('?.?..?..?????', [1,4], counter) # 6
-calc('?.?..?..???????.?..?..?????', [1,4,1,4], counter) # 78
+counter = calc('?.?..?..???????.?..?..?????', [1,4,1,4]) # 78
 # calc('?.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4], counter) # 1038
 # calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4], counter) 
 # calc('?.?..?..???????.?..?..???????.?..?..???????.?..?..???????.?..?..?????', [1,4,1,4,1,4,1,4,1,4], counter)
