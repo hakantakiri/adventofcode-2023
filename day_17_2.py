@@ -10,8 +10,8 @@ sys.setrecursionlimit(100000)
 
 WIDTH = len(lines[0])
 HEIGHT = len(lines)
-print(lines)
-print(f'width: {WIDTH}, height: {HEIGHT}')
+# print(lines)
+# print(f'width: {WIDTH}, height: {HEIGHT}')
 
 def print_grid(grid, separator):
     for line in grid:
@@ -74,6 +74,14 @@ def is_straight(moves):
             straight_in_x = False
     return straight_in_y or straight_in_x
 
+def order(next):
+    p = next[0]
+    q = next[1]
+    if (p<HEIGHT and q<WIDTH and p >= 0 and q >= 0 ) :
+        return heat_from_end[p][q]
+    else :
+        return math.inf
+
 grid = get_grid(lines)
 heat_from_end = fill_heat_from_extreme([HEIGHT-1, WIDTH-1], grid, 1)
 # conc = [0]
@@ -83,12 +91,12 @@ def move(pos, loss, path):
     # print(f'- Evaluating concurrents {conc[0]}\t\t\t', end='\r')
     y = pos[0]
     x = pos[1]
-    for next in ([ [y, x+1], [y+1, x] ,  [y-1, x],[y, x-1] ]):
+    # for next in ([ [y+1, x],  [y-1, x], [y, x-1] ,[y, x+1]  ]):
+    for next in (sorted([  [y+1, x],  [y-1, x], [y, x-1] ,[y, x+1] ], key= order)):
         # print(f'Trying next {next}')
         p = next[0]
         q = next[1]
-        if (p<HEIGHT and q<WIDTH and y >= 0 and x >= 0 ) :
-            new_path = copy.deepcopy(path)
+        if (p<HEIGHT and q<WIDTH and p >= 0 and q >= 0 ) :
             if next not in path:
                 # print(f'Is not previous')
                 ver = [next]
@@ -102,21 +110,29 @@ def move(pos, loss, path):
                 # print(f'-- path to verify {ver}')
                 if len(ver)<=4 or ( len(ver)==5 and not is_straight(ver)):
                     # print(f'--- Is not straight')
-                    if( loss + heat_from_end[p][q] < min_loss[0]):
-                        loss += int(lines[p][q])
+                    # if( loss + heat_from_end[p][q] < min_loss[0]):
+                    # n=[]
+                    # for cur in path:
+                    #     n.append(grid[cur[0]][cur[1]])
+                    # loss = sum(n)
+                    if( loss+heat_from_end[p][q]  < min_loss[0]):
+                        new_path = copy.deepcopy(path)
                         new_path.append(next)
+                        n_loss = loss + int(grid[p][q])
                         if next == [HEIGHT-1, WIDTH-1]:
-                            min_loss[0] = loss
-                            # print(f'- Found a path with loss: {loss} to path: {new_path}')
-                            print('\n')
-                            print(f'Current loss: {loss}, min is: {min_loss[0]}')
-                            print_grid_with_path(lines, new_path, '\t', '#')
-                            time.sleep(0.1)
-                            # return (new_path, loss)
-                            # continue
-                            # return
+                            if n_loss < min_loss[0]:
+                                min_loss[0] = n_loss
+                                # print(f'- Found a path with loss: {loss} to path: {new_path}')
+                                print('\n')
+                                print(f'Current loss: {n_loss}, min is: {min_loss[0]}')
+                                # print(new_path)
+                                # print_grid_with_path(lines, new_path, '\t', '#')
+                                # time.sleep(0.1)
+                                # return (new_path, loss)
+                                # continue
+                                return
                         else:
-                            move(next, loss, new_path)
+                            move(next, n_loss, new_path)
 
 def part_1():
     move([0,0], 0, [[0,0]])
