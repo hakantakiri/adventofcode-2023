@@ -8,8 +8,8 @@ lines = f.read()
 lines = lines.splitlines()
 sys.setrecursionlimit(100000)
 
-WIDTH = len(lines[0])
 HEIGHT = len(lines)
+WIDTH = len(lines[0])
 # print(lines)
 # print(f'width: {WIDTH}, height: {HEIGHT}')
 
@@ -80,12 +80,54 @@ def order(next):
     if (p<HEIGHT and q<WIDTH and p >= 0 and q >= 0 ) :
         return heat_from_end[p][q]
     else :
-        return math.inf
+        return (math.inf)*(abs(p-(HEIGHT-1)) + abs(q - (WIDTH-1)))
+    
+def distance_to_path(pos, m_path):
+    dist = math.inf
+    for p in m_path:
+        d = abs(p[0]-pos[0])+abs(p[1]-pos[1])
+        if d < dist :
+            dist = d
+    return dist
+
+def retrocession(next, path):
+    d_p_to_e = distance_to_path([HEIGHT-1, WIDTH-1], path)
+    d_n_to_e = abs(next[0]- (HEIGHT-1)) + abs(next[1]- (WIDTH-1))
+    return d_n_to_e-d_p_to_e
 
 grid = get_grid(lines)
 heat_from_end = fill_heat_from_extreme([HEIGHT-1, WIDTH-1], grid, 1)
+print('Obtained heat loss')
+# print_grid(heat_from_end, '\t')
+
+s= [0,0]
+path_heat = []
+path_heat.append(s)
+c = copy.deepcopy(s)
+while c != [HEIGHT-1, WIDTH-1]:
+    y = c[0]
+    x = c[1]
+    min_candidate = heat_from_end[y][x]
+    min_next = []
+    for next in ([[y+1, x], [y-1, x], [y, x-1], [y, x+1]]):
+        p = next[0]
+        q = next[1]
+        if (p<HEIGHT and q<WIDTH and p >= 0 and q >= 0  and next not in path_heat) :
+            if heat_from_end[p][q] < min_candidate:
+                min_candidate = heat_from_end[p][q]
+                min_next = next
+    path_heat.append(min_next)
+    c = min_next
+
+print('current min path')
+print(path_heat)
+
+# print(distance_to_path([12,1], path_heat))
+
 # conc = [0]
 min_loss = [math.inf]
+min_path = [path_heat]
+# min_loss = [993]
 def move(pos, loss, path):
     # conc[0]+=1
     # print(f'- Evaluating concurrents {conc[0]}\t\t\t', end='\r')
@@ -97,8 +139,10 @@ def move(pos, loss, path):
         p = next[0]
         q = next[1]
         if (p<HEIGHT and q<WIDTH and p >= 0 and q >= 0 ) :
-            if next not in path:
-                # print(f'Is not previous')
+            # print('Min path is:')
+            # print(min_path)
+            # if next not in path and loss+heat_from_end[p][q] < min_loss[0] :
+            if next not in path and loss+heat_from_end[p][q] < min_loss[0] and  retrocession(next, path)<6 and distance_to_path(next, min_path[0]) < 6:
                 ver = [next]
                 ver.append(pos)
                 if len(path)>=2:
@@ -115,24 +159,24 @@ def move(pos, loss, path):
                     # for cur in path:
                     #     n.append(grid[cur[0]][cur[1]])
                     # loss = sum(n)
-                    if( loss+heat_from_end[p][q]  < min_loss[0]):
-                        new_path = copy.deepcopy(path)
-                        new_path.append(next)
-                        n_loss = loss + int(grid[p][q])
-                        if next == [HEIGHT-1, WIDTH-1]:
-                            if n_loss < min_loss[0]:
-                                min_loss[0] = n_loss
-                                # print(f'- Found a path with loss: {loss} to path: {new_path}')
-                                print('\n')
-                                print(f'Current loss: {n_loss}, min is: {min_loss[0]}')
-                                # print(new_path)
-                                # print_grid_with_path(lines, new_path, '\t', '#')
-                                # time.sleep(0.1)
-                                # return (new_path, loss)
-                                # continue
-                                return
-                        else:
-                            move(next, n_loss, new_path)
+                    new_path = copy.deepcopy(path)
+                    new_path.append(next)
+                    n_loss = loss + int(grid[p][q])
+                    if next == [HEIGHT-1, WIDTH-1]:
+                        if n_loss < min_loss[0]:
+                            min_loss[0] = n_loss
+                            min_path[0] = new_path
+                            # print(f'- Found a path with loss: {loss} to path: {new_path}')
+                            print('\n')
+                            print(f'Current loss: {n_loss}, min is: {min_loss[0]}')
+                            # print(new_path)
+                            # print_grid_with_path(lines, new_path, '\t', '#')
+                            # time.sleep(0.1)
+                            # return (new_path, loss)
+                            # continue
+                            return
+                    else:
+                        move(next, n_loss, new_path)
 
 def part_1():
     move([0,0], 0, [[0,0]])
