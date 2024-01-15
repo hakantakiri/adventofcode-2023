@@ -206,3 +206,6 @@ plan = get_plan(lines)
 print(f'Solution 1: {get_area(plan)}')
 new_plan = get_new_plan(plan)
 print(f'Solution 2: {get_area(new_plan)}')
+
+# Solution 1: 49061
+# Solution 2: 92556825427032
