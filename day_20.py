@@ -1,10 +1,10 @@
-# % starts off, recieves high ignore, recieves low inverse is current state and send high if was off, send low if was on
+# FLIP FLOP % starts off, recieves high ignore, recieves low inverse is current state and send high if was off, send low if was on
 # low  -> %off %on send high
 # high -> %off %off
 # low  -> %on %off send low
 # high -> %on -ignore (maybe not happing)
 
-# & remembers, start with LOW, if ALL inputs are HIGH send LOW, else sen HIGH
+# CONJUCTION & remembers, start with LOW, if ALL inputs are HIGH send LOW, else sen HIGH
 # all HIGH -> LOW
 # mix ------> HIGH
 # all LOW  -> HIGH
@@ -46,27 +46,46 @@ def get_modules(lines):
         modules[fm['name']] = fm
     return modules
 
+high_lows = [0,0]
+
+class Button():
+    def press(self, broadcaster, modules):
+        print(f'button -low-> broadcaster')
+        h,l = broadcaster.press_button(modules)
+        return h, l+1
+
+
 class Broadcaster:
     def __init__(self, destinations):
         self.destinations = destinations # [name]
     
     def press_button(self, modules):
+        highs, lows= 0,0
         for d in self.destinations:
+            print(f'broadcaster -low-> {d}')
             modules[d].receive_signal(d, 'low')
-        return [0, len(self.destinations)]
+            lows+=1
+        return highs, lows
     
 class Output:
     def __init__(self):
         self.name = 'output'
         self.destinations = []
+
     def receive_signal(self, source_name, signal):
-        print(f' - Output received signal {signal} from "{source_name}"')
+        # print(f' - Output received signal {signal} from "{source_name}"')
         return
     def execute_next_instructions(self, modules):
         return [0, 0]
     
+    def pending(self):
+        return False
+    
+    def get_state(self):
+        return False
+    
 
-class FlipFlop:
+class FlipFlop: # %
     def __init__(self, name, destinations):
         self.state = 'off'
         self.name = name
@@ -96,8 +115,8 @@ class FlipFlop:
         for d in self.destinations:
             self.next_instructions.append([d, signal])
 
-    def has_pending(self):
-        if len(self.next_instructions) >= 0:
+    def pending(self):
+        if len(self.next_instructions) > 0:
             return True
         else:
             return False
@@ -108,15 +127,16 @@ class FlipFlop:
         # if self.state == 'on':
         if len(self.next_instructions) > 0:
             for next in self.next_instructions:
+                print(f'%{self.name} -{next[1]}-> {next[0]}')
                 modules[next[0]].receive_signal(self.name, next[1])
                 if next[1] == 'high':
                     highs +=1
                 else:
                     lows +=1
             self.next_instructions = []
-        return [highs, lows]
+        return highs, lows
 
-class Conjunction:
+class Conjunction: # &
     def __init__(self, name, destinations):
         self.name = name
         self.type = 'conjunction'
@@ -136,89 +156,120 @@ class Conjunction:
     
     def get_state(self):
         return self.get_result_signal()
+    
+    def pending(self):
+        return self.has_pending
 
     def receive_signal(self, source_name, signal):
+        # print(f'- Received at &{self.name} signal {signal} from source {source_name}')
         updated = False
         # updating input signal
         for input in self.inputs:
             if input[0] == source_name:
-                input[1] == signal
+                input[1] = signal
                 updated = True
         
         if updated == False:
             self.inputs.append([source_name, signal])
 
         self.has_pending = True
-    
+
+        # print(f'- Updated &{self.name} inputs are {self.inputs}')   
+
     def execute_next_instructions(self, modules):
         highs = 0
         lows = 0
         if self.has_pending == True:
             for d in self.destinations:
+                print(f'&{self.name} -{self.get_result_signal()}-> {d}')
                 modules[d].receive_signal(self.name, self.get_result_signal())
                 if (self.get_result_signal() == 'high'):
                     highs += 1
                 else:
                     lows +=1
             self.has_pending = False
-        return [highs, lows]
+        return highs, lows
 
 
 ################################ EXECUTION
+def part_1 (lines):
+    broad_map = get_broadcaster(lines)
 
-broad_map = get_broadcaster(lines)
-print('broadcaster_map')
-print(broad_map)
+    modules_map = get_modules(lines)
 
-modules_map = get_modules(lines)
-# print('modules_map')
-# print(modules_map)
+    modules = {}
+    for name in modules_map:
+        t = modules_map[name]
+        if t['type'] == '%':
+            modules[name] = FlipFlop(name, modules_map[name]['destinations'])
+        else:
+            modules[name] = Conjunction(name, modules_map[name]['destinations'])
+    modules['output'] = Output()
+    modules['rx'] = Output()
+            
+    broad = Broadcaster(broad_map['destinations'])
+    button = Button()
 
-modules = {}
-for name in modules_map:
-    t = modules_map[name]
-    if t['type'] == '%':
-        modules[name] = FlipFlop(name, modules_map[name]['destinations'])
-    else:
-        modules[name] = Conjunction(name, modules_map[name]['destinations'])
-modules['output'] = Output()
-modules['rx'] = Output()
-# print('a state before')
-# print(modules['a'])
-        
-broad = Broadcaster(broad_map['destinations'])
-# broad.press_button(modules)
+    ## Execution
 
-# print('a state after')
-# print(modules['a'])
-highs = 0
-lows = 0
-clock = 100000
-queue = broad.destinations
-s1 = broad.press_button(modules)
-highs += s1[0]
-lows += s1[1]
-# print('s1')
-# print(s1)
+    highs, lows = 0,0
+    button_presses = 1000
+    for i in range(0, button_presses):
+        print(f'\n--------------Button press {i+1}------------')
+        h,l=button.press(broad, modules)
+        highs+=h
+        lows+=l
+        next_clock = True
+        while next_clock:
+            # print(f'\nCycle {i+1}')
+            prev_h, prev_l = highs, lows
+            ms = [m_n for m_n in modules if modules[m_n].pending()]
+            # print(f'Will execute {ms}')
+            for module_name in ms:
+                h,l= modules[module_name].execute_next_instructions(modules)
+                highs+=h
+                lows+=l
+            
+           
+            
+            if( prev_h == highs and prev_l == lows):
+                next_clock = False
+        print(f'\nHighs: {highs}, Lows: {lows}')
+        for m in modules:
+            print(f'-- State of module: {m}')
+            print(modules[m].get_state())
 
-for i in range(0, clock):
-    print(f'CLOCK: {i}')
-    print(f'queue')
-    print(queue)
-    new_queue = []
-    for name in queue:
-        for module_name in modules:
-            if module_name == name:
-                # print(modules[module_name])
-                sx = modules[module_name].execute_next_instructions(modules)
-                # print('sx')
-                # print(sx)
-                highs += sx[0]
-                lows += sx[1]
-                dest = modules[module_name].destinations
-                for d in dest:
-                    if d not in new_queue:
-                        new_queue.append(d)
-    queue = copy.deepcopy(new_queue)
-    print(f'HIGHS AND LOWS: {highs}, {lows}')
+
+
+part_1(lines)
+
+# highs = 0
+# lows = 0
+# clock = 10000
+# queue = broad.destinations
+# s1 = broad.press_button(modules)
+# highs += s1[0]
+# lows += s1[1]
+
+
+# for i in range(0, clock):
+#     print(f'CLOCK: {i}')
+#     print(f'queue')
+#     print(queue)
+#     new_queue = []
+#     for name in queue:
+#         for module_name in modules:
+#             if module_name == name:
+#                 # print(modules[module_name])
+#                 sx = modules[module_name].execute_next_instructions(modules)
+#                 # print('sx')
+#                 # print(sx)
+#                 highs += sx[0]
+#                 lows += sx[1]
+#                 dest = modules[module_name].destinations
+#                 for d in dest:
+#                     if d not in new_queue:
+#                         new_queue.append(d)
+#     queue = copy.deepcopy(new_queue)
+#     print(f'HIGHS AND LOWS: {highs}, {lows}')
 
