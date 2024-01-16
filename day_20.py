@@ -1,3 +1,4 @@
+
 # FLIP FLOP % starts off, recieves high ignore, recieves low inverse is current state and send high if was off, send low if was on
 # low  -> %off %on send high
 # high -> %off %off
@@ -12,7 +13,7 @@
 # Broadcaster just REPEAT input to ALL destinations
 
 # button module send a single LOW to Broadcaster
-
+from hashlib import sha256
 import copy
 f = open('inputs/doc_day_20.txt')
 lines = f.read()
@@ -41,10 +42,12 @@ def format_module(r_module):
 def get_modules(lines):
     r_modules = [line for line in lines if line.find('broadcaster') < 0]
     modules = {}
+    ord_modules = []
     for m in r_modules:
         fm = format_module(m)
         modules[fm['name']] = fm
-    return modules
+        ord_modules.append(fm['name'])
+    return modules, ord_modules
 
 high_lows = [0,0]
 
@@ -59,11 +62,14 @@ class Broadcaster:
     def __init__(self, destinations):
         self.destinations = destinations # [name]
     
+    def get_destinations(self):
+        return self.destinations
+    
     def press_button(self, modules):
         highs, lows= 0,0
         for d in self.destinations:
             print(f'broadcaster -low-> {d}')
-            modules[d].receive_signal(d, 'low')
+            modules[d].receive_signal(d, 'low', modules)
             lows+=1
         return highs, lows
     
@@ -71,11 +77,16 @@ class Output:
     def __init__(self):
         self.name = 'output'
         self.destinations = []
+        self.type = 'output'
+    
+    def get_type(self):
+        return self.type
 
-    def receive_signal(self, source_name, signal):
+
+    def receive_signal(self, source_name, signal, modules):
         # print(f' - Output received signal {signal} from "{source_name}"')
         return
-    def execute_next_instructions(self, modules):
+    def execute_next_instructions(self, modules, new_queue):
         return [0, 0]
     
     def pending(self):
@@ -96,20 +107,37 @@ class FlipFlop: # %
     def __str__(self):
         return f'type: flipflop, name: {self.name}, sate: {self.state}, destinations: {self.destinations}, next_instructions: {self.next_instructions}'
     
+    def get_type(self):
+        return self.type
+    
     def get_state(self):
         return self.state
     
-    def receive_signal(self, source_name, signal):
+    def get_destinations(self):
+        return self.destinations
+    
+    def receive_signal(self, source_name, signal, modules):
         # print(f'- Received signal {signal} at FlipFlop {self.name}')
+        state_change = False
+        next_signal = 'high'
         if signal == 'low':
             if self.state == 'off':
                 self.state = 'on'
                 self.set_next_instruction('high')
+                next_signal = 'high'
+                state_change = True
                 # print(f'- - new state is {self.state}')
             else:
                 self.state = 'off'
                 self.set_next_instruction('low')
-                # print(f'- - new state is {self.state}')
+                next_signal = 'low'
+                state_change = True
+                # print(f'- - new state is {self.state}')  
+        # if (state_change):
+        #     for d in self.destinations:
+        #         if modules[d].get_type() == 'conjunction':
+        #             modules[d].update_input_state(self.name, next_signal)
+
 
     def set_next_instruction(self, signal):
         for d in self.destinations:
@@ -121,18 +149,20 @@ class FlipFlop: # %
         else:
             return False
     
-    def execute_next_instructions(self, modules):
+    def execute_next_instructions(self, modules, new_queue):
         highs = 0
         lows = 0
         # if self.state == 'on':
         if len(self.next_instructions) > 0:
             for next in self.next_instructions:
                 print(f'%{self.name} -{next[1]}-> {next[0]}')
-                modules[next[0]].receive_signal(self.name, next[1])
+                modules[next[0]].receive_signal(self.name, next[1], modules)
                 if next[1] == 'high':
                     highs +=1
                 else:
                     lows +=1
+                if next[0] not in new_queue:
+                    new_queue.append(next[0])
             self.next_instructions = []
         return highs, lows
 
@@ -145,22 +175,41 @@ class Conjunction: # &
         self.has_pending = False
     
     def __str__(self):
-        return f'type: conjunction, name: {self.name}, signal: {self.get_result_signal()} , destinations: {self.destinations}, has_pending: {self.has_pending}'
+        return f'type: conjunction, name: {self.name}, signal: {self.get_result_signal()} , inputs {self.inputs}, destinations: {self.destinations}, has_pending: {self.has_pending}'
+
+    def get_type(self):
+        return self.type
+
+    def add_input(self, name, signal):
+        self.inputs.append([name, signal])
+
+    def get_destinations(self):
+        return self.destinations
 
     def get_result_signal(self):
         result_signal = 'low'
         for input in self.inputs:
             if input[1] == 'low':
                 result_signal = 'high'
+        if len(self.inputs) == 0:
+            result_signal = 'high'
         return result_signal
     
     def get_state(self):
         return self.get_result_signal()
+
+    def update_input_state(self, input_name, next_signal):
+        # print('input names')
+        # print(self.inputs)
+        # print(input_name)
+        for i in self.inputs:
+            if i[0] == input_name:
+                i[1] = next_signal
     
     def pending(self):
         return self.has_pending
 
-    def receive_signal(self, source_name, signal):
+    def receive_signal(self, source_name, signal, modules):
         # print(f'- Received at &{self.name} signal {signal} from source {source_name}')
         updated = False
         # updating input signal
@@ -176,26 +225,44 @@ class Conjunction: # &
 
         # print(f'- Updated &{self.name} inputs are {self.inputs}')   
 
-    def execute_next_instructions(self, modules):
+    def execute_next_instructions(self, modules, new_queue):
+        # print(self)
         highs = 0
         lows = 0
         if self.has_pending == True:
             for d in self.destinations:
                 print(f'&{self.name} -{self.get_result_signal()}-> {d}')
-                modules[d].receive_signal(self.name, self.get_result_signal())
+                modules[d].receive_signal(self.name, self.get_result_signal(), modules)
                 if (self.get_result_signal() == 'high'):
                     highs += 1
                 else:
                     lows +=1
+                if(d not in new_queue):
+                    new_queue.append(d)
+            
             self.has_pending = False
+            
+
         return highs, lows
 
 
 ################################ EXECUTION
+def print_modules_state(modules):
+    text = ''
+    for m in modules:
+        text +=str(modules[m])
+        print(f'-- {m} state: {modules[m]}')
+
+def sha_global_state(modules):
+    text = ''
+    for m in modules:
+        text +=str(modules[m])
+    return sha256(text.encode('utf-8')).hexdigest()
+
 def part_1 (lines):
     broad_map = get_broadcaster(lines)
 
-    modules_map = get_modules(lines)
+    modules_map, ordered_modules_names = get_modules(lines)
 
     modules = {}
     for name in modules_map:
@@ -206,6 +273,14 @@ def part_1 (lines):
             modules[name] = Conjunction(name, modules_map[name]['destinations'])
     modules['output'] = Output()
     modules['rx'] = Output()
+
+    # Setting inputs for conjunctions%
+    for name in modules:
+        if modules[name].get_type() == 'conjunction':
+            for n in modules:
+                if modules[n].get_type() == 'flipflop':
+                    if name in modules[n].get_destinations():
+                        modules[name].add_input(n, 'low')
             
     broad = Broadcaster(broad_map['destinations'])
     button = Button()
@@ -214,34 +289,63 @@ def part_1 (lines):
 
     highs, lows = 0,0
     button_presses = 1000
-    for i in range(0, button_presses):
+    
+    print_modules_state(modules)
+    shas = []
+    shas.append(sha_global_state(modules))
+    sol = []
+
+    queue = broad.get_destinations()
+
+    for i in range(button_presses):
+        # new_queue = []
+        print('queue')
+        print(queue)
         print(f'\n--------------Button press {i+1}------------')
         h,l=button.press(broad, modules)
         highs+=h
         lows+=l
         next_clock = True
+        # for j in range(0, 10000):
         while next_clock:
             # print(f'\nCycle {i+1}')
+            new_queue = []
             prev_h, prev_l = highs, lows
-            ms = [m_n for m_n in modules if modules[m_n].pending()]
-            # print(f'Will execute {ms}')
+            ms = [m_n for m_n in queue if modules[m_n].pending()]
+            print(f'Will execute {ms}')
             for module_name in ms:
-                h,l= modules[module_name].execute_next_instructions(modules)
+                h,l= modules[module_name].execute_next_instructions(modules, new_queue)
+
                 highs+=h
-                lows+=l
+                lows+=l 
             
-           
-            
+            queue = new_queue
             if( prev_h == highs and prev_l == lows):
                 next_clock = False
+
         print(f'\nHighs: {highs}, Lows: {lows}')
-        for m in modules:
-            print(f'-- State of module: {m}')
-            print(modules[m].get_state())
+        sol.append((highs, lows))
+
+        print('final queue')
+        print(queue)
+
+        print_modules_state(modules)    
+        if (sha_global_state(modules) in shas):
+            print(f'----- REPEATED STATE AFTER {i+1} button presses')
+            # break
+
+    print(f' -> Multiplication is {highs*lows}')
+    
+    return sol
 
 
 
-part_1(lines)
+sol = part_1(lines)
+# print(sol)
+
+
+# for s in sol:
+#     print(f'{s[0]}\t{s[1]}')
 
 # highs = 0
 # lows = 0
