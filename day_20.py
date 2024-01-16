@@ -87,7 +87,7 @@ class Output:
         # print(f' - Output received signal {signal} from "{source_name}"')
         return
     def execute_next_instructions(self, modules, new_queue):
-        return [0, 0]
+        return 0,0
     
     def pending(self):
         return False
@@ -288,46 +288,45 @@ def part_1 (lines):
     ## Execution
 
     highs, lows = 0,0
-    button_presses = 1000
+    button_presses = 4
     
     print_modules_state(modules)
     shas = []
     shas.append(sha_global_state(modules))
     sol = []
 
-    queue = broad.get_destinations()
+    queue = []
 
     for i in range(button_presses):
         # new_queue = []
-        print('queue')
-        print(queue)
         print(f'\n--------------Button press {i+1}------------')
         h,l=button.press(broad, modules)
+        queue = copy.deepcopy(queue)+broad.get_destinations()
+        print('queue')
+        print(queue)
         highs+=h
         lows+=l
         next_clock = True
         # for j in range(0, 10000):
-        while next_clock:
+        # while next_clock:
+        while len(queue)>0:
             # print(f'\nCycle {i+1}')
             new_queue = []
             prev_h, prev_l = highs, lows
-            ms = [m_n for m_n in queue if modules[m_n].pending()]
+            # ms = [m_n for m_n in queue if modules[m_n].pending()]
+            ms = [m_n for m_n in queue]
             print(f'Will execute {ms}')
             for module_name in ms:
                 h,l= modules[module_name].execute_next_instructions(modules, new_queue)
 
                 highs+=h
                 lows+=l 
-            
             queue = new_queue
             if( prev_h == highs and prev_l == lows):
                 next_clock = False
 
         print(f'\nHighs: {highs}, Lows: {lows}')
         sol.append((highs, lows))
-
-        print('final queue')
-        print(queue)
 
         print_modules_state(modules)    
         if (sha_global_state(modules) in shas):
