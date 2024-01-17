@@ -367,13 +367,10 @@ def part_1 (lines, button_presses):
         highs+=h
         lows+=l
         while len(queue)>0:
-            ms = queue[0]
-            if (len(queue)==1):
-                queue = []
-            else:
-                queue = queue[1:]
+            next = queue[0]
+            queue = queue[1:]
             add_to_queue = []
-            h,l= modules[ms].execute_next_instructions(modules, add_to_queue, i+1)
+            h,l= modules[next].execute_next_instructions(modules, add_to_queue, i+1)
             highs +=h
             lows +=l 
 
@@ -382,7 +379,6 @@ def part_1 (lines, button_presses):
     return highs*lows
 
 def part_2 (lines):
-    highs, lows = 0,0
     queue = []
     button, broad, modules = get_all_modules(lines)
     if 'rx' in modules:
@@ -394,20 +390,13 @@ def part_2 (lines):
     btn_press_count = 0
     while len(watch) != len(watch_bases[0]):
         # print(f'--------------Button press {i+1}------------\t\t\t\t', end='\r')
-        h,l=button.press(broad, modules)
+        button.press(broad, modules)
         queue = queue+broad.get_destinations()
-        highs+=h
-        lows+=l
         while len(queue)>0:
             next = queue[0]
-            if (len(queue)==1):
-                queue = []
-            else:
-                queue = queue[1:]
+            queue = queue[1:]
             add_to_queue = []
-            h,l= modules[next].execute_next_instructions(modules, add_to_queue, btn_press_count+1)
-            highs +=h
-            lows +=l 
+            modules[next].execute_next_instructions(modules, add_to_queue, btn_press_count+1)
             queue += add_to_queue
         btn_press_count+=1
 
